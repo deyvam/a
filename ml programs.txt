@@ -1,0 +1,352 @@
+#p1
+
+import pandas as pd
+import numpy as np
+
+def find_s(con, tar):
+    for i, val in enumerate(tar):
+        if val == 'yes':
+            specific_h = con[i].copy()
+            break
+
+    for i, val in enumerate(con):
+        if tar[i] == 'yes':
+            for j in range(len(specific_h)):
+                if val[j] != specific_h[j]:
+                    specific_h[j] = '?'
+                else:
+                    pass
+    
+    return specific_h
+
+def list_then_eliminate(con, tar):
+    general_h = ['?' for i in range(len(con[0]))]
+    for i, val in enumerate(tar):
+        if val == 'yes':
+            for j in range(len(con[i])):
+                if general_h[j] == '?':
+                    general_h[j] = con[i][j]
+                elif general_h[j] != con[i][j]:
+                    general_h[j] = '?'
+    
+    return general_h
+data = pd.read_csv('enjoysport.csv')
+print(data)
+print("-----------")
+concepts=np.array(data)[:,:-1]
+print(concepts)
+print("-----------")
+targets=np.array(data)[:,-1]
+print(targets)
+print("-----------")
+h1 = find_s(concepts,targets)
+print("Most specific hypothesis by FIND-S algorithm is:", h1)
+h2 = list_then_eliminate(concepts,targets)
+print("Final hypothesis space by LIST THEN ELIMINATE algorithm is:", h2)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p2
+
+import numpy as np
+import pandas as pd
+
+data=pd.read_csv('enjoysport.csv')
+print(data)
+concepts = np.array(data)[:,0:-1]
+print(concepts)
+target = np.array(data)[:,-1]
+print(target)
+
+def learn(concepts, target):      
+    specific_h = concepts[0].copy()
+    general_h = [["?" for i in range(len(specific_h))] for i in range(len(specific_h))]
+    print("\nInitialization of specific_h and general_h")
+    print(specific_h)
+    print(general_h)
+    for i, val in enumerate(concepts):
+        if target[i] == "yes":
+            for x in range(len(specific_h)):
+                if val[x] != specific_h[x]:
+                    specific_h[x] = '?'
+                    general_h[x][x] = '?'
+        if target[i] == "no":
+            for x in range(len(specific_h)):
+                if val[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+
+        print("\nSteps of Candidate Elimination Algorithm",i+1)
+        print(specific_h)
+        print(general_h)
+    
+    indices = [i for i, val in enumerate(general_h) if val == ['?', '?', '?', '?', '?', '?']]
+    for i in indices:
+        general_h.remove(['?', '?', '?', '?', '?', '?'])
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+print("\nFinal Specific_h:", s_final)
+print("\nFinal General_h:", g_final)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p3
+
+import pandas as pd
+
+data = pd.read_csv('Housing1.csv')
+print(data)
+print(data.isnull().sum())
+
+data = data.dropna()
+print(data)
+
+data = pd.read_csv('Housing1.csv')
+data1 = pd.read_csv('Housing2.csv')
+data_merged = pd.merge(data, data1, on='price')
+data_concatenated = pd.concat([data, data1], axis=0)
+print(data_concatenated)
+
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+data['offer'] = scaler.fit_transform(data['offer'].values.reshape(-1, 1))
+
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+data['offer'] = scaler.fit_transform(data['offer'].values.reshape(-1, 1))
+print(data)
+
+df = pd.DataFrame(data)
+print("Original dataset:")
+print(df)
+print()
+df = df.loc[:, df.nunique() > 1]
+print("Preprocessed dataset:")
+print(df)
+
+duplicate_rows = data[data.duplicated()]
+print(duplicate_rows)
+data.drop_duplicates(inplace=True)
+data.reset_index(drop=True, inplace=True)
+print(data)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p4
+
+from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
+
+df = pd.read_csv('playtennis.csv')
+
+le = LabelEncoder()
+df_num = pd.DataFrame()
+df_num['Outlook'] = le.fit_transform(df['Outlook'])
+df_num['Temperature'] = le.fit_transform(df['Temperature'])
+df_num['Humidity'] = le.fit_transform(df['Humidity'])
+df_num['Wind'] = le.fit_transform(df['Wind'])
+df_num['Play Tennis'] = le.fit_transform(df['Play Tennis'])
+
+X = df_num.drop('Play Tennis', axis=1)
+y = df_num['Play Tennis']
+
+dtree = DecisionTreeClassifier(criterion='entropy', max_depth=2)
+dtree.fit(X, y)
+dtree.score(X, y)
+
+y_predict = dtree.predict(X)
+tree.plot_tree(dtree)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p5
+
+from sklearn import datasets
+from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn import tree
+
+iris = load_iris()
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=40)
+
+rfc = RandomForestClassifier(n_estimators=100, random_state=42).fit(X_train, y_train)
+y_pred = rfc.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+
+new_sample = [[9.1, 0.5, 2.4, 5.2]]
+new_pred = rfc.predict(new_sample)
+print("Predicted class:", iris.target_names[new_pred])
+
+tree_index = 0 
+tree.plot_tree(rfc.estimators_[tree_index])
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p6
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder 
+from sklearn.naive_bayes import GaussianNB
+
+data = pd.read_csv("playtennis.csv")
+print("The first 5 Values of data is :\n", data.head())
+X = data.iloc[:,:-1]
+print("\nThe First 5 values of the train data is\n", X.head())
+y = data.iloc[:, -1]
+print("\nThe First 5 values of train output is\n", y.head())
+
+le_outlook=LabelEncoder()
+X.Outlook=le_outlook.fit_transform(X.Outlook)
+le_Temperature = LabelEncoder()
+X.Temperature = le_Temperature.fit_transform(X.Temperature)
+le_Humidity = LabelEncoder()
+X.Humidity = le_Humidity.fit_transform(X.Humidity)
+le_Wind = LabelEncoder()
+X.Wind= le_Wind.fit_transform(X.Wind)
+print("\nNow the Train data is\n", X.head())
+
+le_PlayTennis = LabelEncoder()
+y = le_PlayTennis.fit_transform(y)
+print("\nNow the Train output is\n",y)
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test=train_test_split(X,y,test_size = 0.20)
+classifier=GaussianNB()
+classifier.fit(X_train,y_train)
+
+from sklearn.metrics import accuracy_score
+print("Accuracy is:", accuracy_score(classifier.predict(X_test),y_test))
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p7
+
+from sklearn.datasets import fetch_20newsgroups
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.naive_bayes import MultinomialNB
+
+categories = ['alt.atheism', 'soc.religion.christian','comp.graphics', 'sci.med']
+train = fetch_20newsgroups(subset='train',categories=categories,shuffle=True)
+test = fetch_20newsgroups(subset='test',categories=categories,shuffle=True)
+print(len(train.data))
+print(len(test.data))
+print(train.target_names)
+
+cv = CountVectorizer()
+train_tf = cv.fit_transform(train.data)
+test_tf = cv.transform(test.data)
+
+tfidf_transformer = TfidfTransformer()
+train_tfidf = tfidf_transformer.fit_transform(train_tf)
+test_tfidf = tfidf_transformer.transform(test_tf)
+
+mod = MultinomialNB()
+mod.fit(train_tfidf, train.target)
+predicted = mod.predict(test_tfidf)
+
+print("Accuracy:", accuracy_score(test.target, predicted))
+print(classification_report(test.target, predicted, target_names=test.target_names))
+print("confusion matrix is \n", confusion_matrix(test.target, predicted))
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p8
+
+import numpy as np
+import pandas as pd
+from pgmpy.models import BayesianModel
+from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.inference import VariableElimination
+
+data = pd.read_csv('heart.csv')
+data = data.replace('?',np.nan)
+print('Few examples from the dataset are given below')
+print(data.head())
+model=BayesianModel([('age','trestbps'),('age','fbs'),('sex','trestbps'),('exang','trestbps')
+                   ,('trestbps','heartdisease'),('fbs','heartdisease')])
+
+print('\n Learning CPD using Maximum likelihood estimators')
+model.fit(data,estimator=MaximumLikelihoodEstimator)
+
+print('\n Inferencing with Bayesian Network:')
+data_infer = VariableElimination(model)
+
+print('\n 1. Probability of HeartDisease given Age=30')
+q=data_infer.query(variables=['heartdisease'],evidence={'age': 53, 'sex' :1})
+print(q)
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p9
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.cluster import KMeans
+import pandas as pd
+import numpy as np 
+from sklearn.mixture import GaussianMixture
+
+iris=datasets.load_iris()
+X=pd.DataFrame(iris.data)
+y=pd.DataFrame(iris.target)
+X.columns=['SepalLengthCm','SepalWidthCm','PetalLengthCm','PetalWidthCm']
+y.columns=['Targets']
+model=KMeans(n_clusters=3).fit(X)
+plt.figure(figsize=(14,7))
+colormap=np.array(['red','lime','black'])
+
+plt.subplot(1,3,1)
+plt.scatter(X.PetalLengthCm,X.PetalWidthCm,c=colormap[y.Targets],s=40)
+plt.title('Real Clusters')
+plt.xlabel('Petal length')
+plt.ylabel('Petal Width')
+plt.subplot(1,3,2)
+plt.scatter(X.PetalLengthCm, X.PetalWidthCm,c=colormap[model.labels_],s=40)
+plt.title('K Means Clustering')
+plt.xlabel('Petal length')
+plt.ylabel('Petal Width')
+
+gmm=GaussianMixture(n_components=3, random_state=0).fit(X)
+y_gmm=gmm.predict(X)
+plt.subplot(1,3,3)
+plt.title('GMM Clustering')
+plt.xlabel('Petal length')
+plt.ylabel('Petal Width')
+plt.scatter(X.PetalLengthCm, X.PetalWidthCm,c=colormap[y_gmm])
+print("observation: The GMM using EM algorithm based clustering matched the true labels more closely then KMeans")
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+#p10
+
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+from mlxtend.plotting import plot_decision_regions
+
+breast_cancer = datasets.load_breast_cancer()
+X_train, X_test, y_train, y_test = train_test_split(breast_cancer.data[:, :2], breast_cancer.target, test_size=0.2, random_state=42) 
+
+svm = SVC(kernel='linear', C=1).fit(X_train, y_train)
+y_predict = svm.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_predict))
+print("Classification report:", classification_report(y_test, y_predict))
+
+plot_decision_regions(X_train, y_train, clf=svm, legend=2)
+plt.xlabel('mean radius')
+plt.ylabel('mean texture')
+plt.title("SVM boundary decision")
+plt.show
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
+-------------------------------------------------------------------------
